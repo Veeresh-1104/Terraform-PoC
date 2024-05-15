@@ -56,6 +56,15 @@ resource "aws_lambda_function" "ingestion_lambda" {
   role          = aws_iam_role.ingestion_lambda_iam_role.arn
   filename      = "${path.module}/lambda_code/lambda_function_payload.zip"
   handler        = "main.lambda_handler"
+  layers                         = [
+    "arn:aws:lambda:us-west-2:336392948345:layer:AWSSDKPandas-Python39:20",
+  ]
+  timeout = 120
+
+
+  # lifecycle{
+  #   ignore_changes = [layers]
+  # }
 }
 
 # INFRA - Event Bridge Ingestion 

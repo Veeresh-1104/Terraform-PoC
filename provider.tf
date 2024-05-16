@@ -12,7 +12,7 @@ terraform {
 }
 
 provider "aws" {
-  region  = "us-west-2"
+  region = "us-west-2"
   //Better Approach : Can pass profile through CMD when applying
   profile = "sbx"
 }

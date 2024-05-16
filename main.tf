@@ -2,12 +2,13 @@
 // Repeating -> Variables
 //Local vars -> Same as resource file
 locals {
-  lambda_ingestion_iam_role = "vgangann-ingestion_lambda_iam_role"
-  lambda_ingestion_target = "vgangann-ingestion-lambda-target-fluwehdw32876423"
+  lambda_ingestion_iam_role           = "vgangann-ingestion_lambda_iam_role"
+  lambda_ingestion_target             = "vgangann-ingestion-lambda-target-fluwehdw32876423"
   lambda_ingestion_target_runtime_env = "python3.9"
-  event_bridge_ingestion = "vgangann-ingestion-event-bridge-tewgfj323wbfw"
-  source_bucket = "vgangann-source-bucket-fewo342"
-  landing_bucket = "vgangann-landing-bucket-fewo342"
+  event_bridge_ingestion              = "vgangann-ingestion-event-bridge-tewgfj323wbfw"
+  source_bucket                       = "vgangann-source-bucket-fewo342"
+  landing_bucket                      = "vgangann-landing-bucket-fewo342"
+  products_table                      = "vgangann-products-table-wr6e8kdjc"
 }
 
 # INFRA - Lambda Ingestion 
@@ -55,8 +56,8 @@ resource "aws_lambda_function" "ingestion_lambda" {
   runtime       = local.lambda_ingestion_target_runtime_env
   role          = aws_iam_role.ingestion_lambda_iam_role.arn
   filename      = "${path.module}/lambda_code/lambda_function_payload.zip"
-  handler        = "main.lambda_handler"
-  layers                         = [
+  handler       = "main.lambda_handler"
+  layers = [
     "arn:aws:lambda:us-west-2:336392948345:layer:AWSSDKPandas-Python39:20",
   ]
   timeout = 120
@@ -81,17 +82,17 @@ resource "aws_cloudwatch_event_target" "ingestion_event_bridge_lambda" {
   target_id = "Trigger-Ingestion-Lambda"
   arn       = aws_lambda_function.ingestion_lambda.arn
   input = jsonencode({
-    "name": "Veeresh-sent-from-EB",
-    "trigger_from_event_bridge": "true"
+    "name" : "Veeresh-sent-from-EB",
+    "trigger_from_event_bridge" : "true"
   })
 }
 
 resource "aws_lambda_permission" "allow_cloudwatch_to_call_lambda" {
-  statement_id = "AllowExecutionFromCloudWatch"
-  action = "lambda:InvokeFunction"
+  statement_id  = "AllowExecutionFromCloudWatch"
+  action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.ingestion_lambda.function_name
-  principal = "events.amazonaws.com"
-  source_arn = aws_cloudwatch_event_rule.ingestion_event_bridge.arn
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.ingestion_event_bridge.arn
 }
 
 

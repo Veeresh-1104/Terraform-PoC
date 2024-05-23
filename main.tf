@@ -3,6 +3,7 @@
 //Local vars -> Same as resource file
 locals {
   lambda_ingestion_iam_role           = "vgangann-ingestion_lambda_iam_role"
+  lambda_ingestion_iam_policy         = "vgangann-ingestion_lambda_iam_policy"
   lambda_ingestion_target             = "vgangann-ingestion-lambda-target-fluwehdw32876423"
   lambda_ingestion_target_runtime_env = "python3.9"
   event_bridge_ingestion              = "vgangann-ingestion-event-bridge-tewgfj323wbfw"
@@ -12,8 +13,11 @@ locals {
   event_bridge_enrichment             = "vgangann-erichment-event-bridge-64reevatih"
   glue_job_enrichment                 = "vgangann-enrichment-glue-job-67fiu2ef723t"
   glue_job_iam_role_arn               = "arn:aws:iam::937000578452:role/glue-job-role"
+
 }
 
+
+####### INGESTION STAGE ---------------------------------------------------
 # INFRA - Lambda Ingestion 
 resource "aws_iam_role" "ingestion_lambda_iam_role" {
   name = local.lambda_ingestion_iam_role
@@ -32,7 +36,7 @@ resource "aws_iam_role" "ingestion_lambda_iam_role" {
 }
 
 resource "aws_iam_policy" "ingestion_lambda_iam_policy" {
-  name = "vgangann-ingestion_lambda_iam_policy"
+  name = local.lambda_ingestion_iam_policy
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -119,17 +123,18 @@ resource "aws_s3_bucket" "vgangann-landing-bucket" {
 }
 
 
+####### ENRICHMENT STAGE ---------------------------------------------------
 # INFRA - Enrichment Glue Job
 resource "aws_glue_job" "enrichment-glue-job" {
-  name     = local.glue_job_enrichment
-  role_arn = local.glue_job_iam_role_arn
-  description               = "Glue job for running the enrichment logic."
-  execution_class           = "STANDARD"
-  number_of_workers         = 10
-  worker_type               = "G.4X"
-  default_arguments         = {
-          "--enable-job-insights" = "true"
-          "--job-language"        = "python"
+  name              = local.glue_job_enrichment
+  role_arn          = local.glue_job_iam_role_arn
+  description       = "Glue job for running the enrichment logic."
+  execution_class   = "STANDARD"
+  number_of_workers = 10
+  worker_type       = "G.4X"
+  default_arguments = {
+    "--enable-job-insights" = "true"
+    "--job-language"        = "python"
   }
 
   command {

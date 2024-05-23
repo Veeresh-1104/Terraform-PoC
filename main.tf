@@ -9,6 +9,9 @@ locals {
   source_bucket                       = "vgangann-source-bucket-fewo342"
   landing_bucket                      = "vgangann-landing-bucket-fewo342"
   products_table                      = "vgangann-products-table-wr6e8kdjc"
+  event_bridge_enrichment             = "vgangann-erichment-event-bridge-64reevatih"
+  glue_job_enrichment                 = "vgangann-enrichment-glue-job-67fiu2ef723t"
+  glue_job_iam_role_arn               = "arn:aws:iam::937000578452:role/glue-job-role"
 }
 
 # INFRA - Lambda Ingestion 
@@ -115,3 +118,21 @@ resource "aws_s3_bucket" "vgangann-landing-bucket" {
   }
 }
 
+
+# INFRA - Enrichment Glue Job
+resource "aws_glue_job" "enrichment-glue-job" {
+  name     = local.glue_job_enrichment
+  role_arn = local.glue_job_iam_role_arn
+  description               = "Glue job for running the enrichment logic."
+  execution_class           = "STANDARD"
+  number_of_workers         = 10
+  worker_type               = "G.4X"
+  default_arguments         = {
+          "--enable-job-insights" = "true"
+          "--job-language"        = "python"
+  }
+
+  command {
+    script_location = "s3://${aws_s3_bucket.vgangann-landing-bucket.bucket}/glue-enrichment.py"
+  }
+}

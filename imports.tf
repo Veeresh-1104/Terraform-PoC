@@ -1,11 +1,12 @@
 locals {
   dynamo_table_products            = "vgangann-products-table-wr6e8kdjc0"
   enrichment_event_bridge_rule     = "vgangann-enrichment-event-bridge-rule-jdoiwe76wed"
-  enrichment_sns                   = "vgangann-test-topics"
+  ingestion_sns                    = "vgangann-ingestion-topic"
   enrichment_glue_workflow         = "vgangan-Enrichment-Glue-Workflow"
   enrichment_glue_workflow_trigger = "vgangann-enrichment-trigger"
   enrichment_event_glue_role       = "Amazon_EventBridge_Invoke_Glue_647180090"
   enrichment_event_glue_policy     = "Amazon_EventBridge_Invoke_Glue_647180090"
+  ingestion_topic_endpoint         = "vgangann@cisco.com"
 }
 
 #INFRA DynamoDB Products table
@@ -13,12 +14,12 @@ resource "aws_dynamodb_table" "products_table_007" {
   name           = local.dynamo_table_products
   hash_key       = "Product_ID"
   range_key      = "Trending_ID"
-  read_capacity  = 5
-  write_capacity = 5
+  read_capacity  = 15
+  write_capacity = 15
 
   attribute {
     name = "Product_ID"
-    type = "N" # Numeric attribute type
+    type = "N" 
   }
 
   attribute {
@@ -51,8 +52,18 @@ resource "aws_cloudwatch_event_rule" "enrichment_event_bridge" {
 
 resource "aws_sns_topic" "ingestion-updates" {
   display_name = "POC - Ingestion"
-  name         = local.enrichment_sns
+  name         = local.ingestion_sns
 }
+
+resource "aws_sns_topic_subscription" "ingestion-email-subscription" {
+  topic_arn                       = aws_sns_topic.ingestion-updates.arn
+  protocol                        = "email"
+  endpoint                        = local.ingestion_topic_endpoint
+  confirmation_timeout_in_minutes = 1
+  endpoint_auto_confirms          = false
+}
+
+
 
 resource "aws_glue_workflow" "enrichment-workflow" {
   name                = local.enrichment_glue_workflow

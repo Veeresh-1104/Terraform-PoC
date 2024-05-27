@@ -113,6 +113,7 @@ resource "aws_s3_bucket" "vgangann-source-bucket" {
   }
 }
 
+#INFRA S3 Landing Bucket
 resource "aws_s3_bucket" "vgangann-landing-bucket" {
   bucket = local.landing_bucket
 

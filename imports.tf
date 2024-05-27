@@ -19,7 +19,7 @@ resource "aws_dynamodb_table" "products_table_007" {
 
   attribute {
     name = "Product_ID"
-    type = "N" 
+    type = "N"
   }
 
   attribute {

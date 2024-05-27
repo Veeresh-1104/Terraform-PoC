@@ -9,6 +9,7 @@ locals {
   event_bridge_ingestion              = "vgangann-ingestion-event-bridge-tewgfj323wbfw"
   source_bucket                       = "vgangann-source-bucket-fewo342"
   landing_bucket                      = "vgangann-landing-bucket-fewo342"
+  curated_bucket                      = "vgangann-curated-bucket-11fwe04fn"
   products_table                      = "vgangann-products-table-wr6e8kdjc"
   event_bridge_enrichment             = "vgangann-erichment-event-bridge-64reevatih"
   glue_job_enrichment                 = "vgangann-enrichment-glue-job-67fiu2ef723t"
@@ -140,5 +141,15 @@ resource "aws_glue_job" "enrichment-glue-job" {
 
   command {
     script_location = "s3://${aws_s3_bucket.vgangann-landing-bucket.bucket}/glue-enrichment.py"
+  }
+}
+
+# INFRA - S3 Curated Bucket
+resource "aws_s3_bucket" "vgangann-curated-bucket" {
+  bucket = local.curated_bucket
+
+  tags = {
+    Name        = "Curated S3"
+    Environment = "Dev"
   }
 }

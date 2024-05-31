@@ -10,10 +10,13 @@ locals {
   source_bucket                       = "vgangann-source-bucket-fewo342"
   landing_bucket                      = "vgangann-landing-bucket-fewo342"
   curated_bucket                      = "vgangann-curated-bucket-11fwe04fn"
+  marketing_bucket                    = "vgangann-marketng-bucket-5d7we2"
   products_table                      = "vgangann-products-table-wr6e8kdjc"
   event_bridge_enrichment             = "vgangann-erichment-event-bridge-64reevatih"
   glue_job_enrichment                 = "vgangann-enrichment-glue-job-67fiu2ef723t"
   glue_job_iam_role_arn               = "arn:aws:iam::937000578452:role/glue-job-role"
+  enrichment_sns                      = "vgangann-enrichment-topic"
+
 
 }
 
@@ -152,4 +155,65 @@ resource "aws_s3_bucket" "vgangann-curated-bucket" {
     Name        = "Curated S3"
     Environment = "Dev"
   }
+  tags_all = {
+    "Environment" = "Dev"
+    "Name"        = "Curated S3"
+  }
 }
+
+# INFRA - SNS Enrichment
+resource "aws_sns_topic" "enrichment-updates" {
+  display_name = "POC - Enrichment ✅"
+  name         = local.enrichment_sns
+}
+
+resource "aws_sns_topic_subscription" "enrichment-email-subscription" {
+  topic_arn                       = aws_sns_topic.enrichment-updates.arn
+  protocol                        = "email"
+  endpoint                        = var.sns_endpoint
+  confirmation_timeout_in_minutes = 1
+  endpoint_auto_confirms          = false
+}
+
+# INFRA - Curated Bucket Versioning
+resource "aws_s3_bucket_versioning" "versioning-curated-bucket" {
+  bucket = local.curated_bucket
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+# INFRA - Marketing Bucket Versioning
+resource "aws_s3_bucket_versioning" "versioning-marketing-bucket" {
+  bucket = aws_s3_bucket.marketing-bucket.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+
+}
+
+# INFRA - Marketing Bucket
+resource "aws_s3_bucket" "marketing-bucket" {
+  bucket = local.marketing_bucket
+}
+
+
+resource "aws_s3_bucket_replication_configuration" "replication" {
+
+  # Must have bucket versioning enabled first
+  depends_on = [aws_s3_bucket_versioning.versioning-curated-bucket]
+
+  role   = "arn:aws:iam::937000578452:role/tf-iam-role-replication-arykulka2x210f"
+  bucket = local.curated_bucket
+
+  rule {
+    
+    status = "Enabled"
+
+    destination {
+      bucket        = aws_s3_bucket.marketing-bucket.arn
+      storage_class = "STANDARD"
+    }
+  }
+}
+

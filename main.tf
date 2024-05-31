@@ -16,7 +16,8 @@ locals {
   glue_job_enrichment                 = "vgangann-enrichment-glue-job-67fiu2ef723t"
   glue_job_iam_role_arn               = "arn:aws:iam::937000578452:role/glue-job-role"
   enrichment_sns                      = "vgangann-enrichment-topic"
-
+  alerting_sns                      = "vgangann-altering-topic"
+  
 
 }
 
@@ -215,5 +216,20 @@ resource "aws_s3_bucket_replication_configuration" "replication" {
       storage_class = "STANDARD"
     }
   }
+}
+
+
+#INFRA SNS - Alerting and Notification
+resource "aws_sns_topic" "alerting-updates" {
+  display_name = "POC - Data Enriched ✅"
+  name         = local.alerting_sns
+}
+
+resource "aws_sns_topic_subscription" "alerting-notifying-subscription" {
+  topic_arn                       = aws_sns_topic.alerting-updates.arn
+  protocol                        = "email"
+  endpoint                        = var.sns_endpoint
+  confirmation_timeout_in_minutes = 1
+  endpoint_auto_confirms          = false
 }
 

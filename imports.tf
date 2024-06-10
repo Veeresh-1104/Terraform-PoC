@@ -24,7 +24,7 @@ resource "aws_dynamodb_table" "products_table" {
 
 resource "aws_dynamodb_table" "customer_table" {
   name           = local.dynamo_table_customer
-  read_capacity  = 1
+  read_capacity  = 15
   write_capacity = 15
 
   attribute {

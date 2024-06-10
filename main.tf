@@ -16,8 +16,9 @@ locals {
   glue_job_enrichment                 = "vgangann-enrichment-glue-job-67fiu2ef723t"
   glue_job_iam_role_arn               = "arn:aws:iam::937000578452:role/glue-job-role"
   enrichment_sns                      = "vgangann-enrichment-topic"
-  alerting_sns                      = "vgangann-altering-topic"
-  
+  alerting_sns                        = "vgangann-altering-topic"
+  alerting_event_bridge_sns           = "vgangann-alerting-event-rule"
+
 
 }
 
@@ -208,7 +209,7 @@ resource "aws_s3_bucket_replication_configuration" "replication" {
   bucket = local.curated_bucket
 
   rule {
-    
+
     status = "Enabled"
 
     destination {
@@ -233,3 +234,28 @@ resource "aws_sns_topic_subscription" "alerting-notifying-subscription" {
   endpoint_auto_confirms          = false
 }
 
+resource "aws_sns_topic_subscription" "alerting-notifying-subscription-secondary" {
+  topic_arn                       = aws_sns_topic.alerting-updates.arn
+  protocol                        = "email"
+  endpoint                        = "arykulka@cisco.com"
+  confirmation_timeout_in_minutes = 1
+  endpoint_auto_confirms          = false
+}
+
+
+# INFRA EVENT BRIDGE for SNS topic
+resource "aws_cloudwatch_event_rule" "alerting_event_bridge" {
+  name = local.alerting_event_bridge_sns
+  event_pattern = jsonencode({
+    "source" : ["aws.s3"],
+    "detail-type" : ["Object Created"],
+    "detail" : {
+      "bucket" : {
+        "name" : ["vgangann-marketng-bucket-5d7we2"]
+      },
+
+    }
+  })
+  description = "Triggered when we have the data in the Marketing Bucket. Triggers SNS"
+
+}
